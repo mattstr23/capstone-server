@@ -39,30 +39,38 @@ app.post("/loginUser", (req, res) => {
 	const email = req.body.email;
 	const password = req.body.password;
 	const compare = async (results, res) => {
-		const validate = await bcrypt.compare(password, results.rows[0].password);
-		if (validate) {
-			const accessToken = jwt.sign(
-				{
-					firstName: results.rows[0].firstName,
-					lastName: results.rows[0].lastName,
-					email: results.rows[0].email,
-					id: results.rows[0].id,
-				},
-				jwtSecret,
-				{ expiresIn: 10800 }
-			);
-			var ca = accessToken;
-			var decoded = jwt_decode(ca);
-			res.status(200).json({ token: accessToken });
-		} else {
-			res.status(400).send("User not authenticated");
+		try {
+			const validate = await bcrypt.compare(password, results.rows[0].password);
+			if (validate) {
+				const accessToken = jwt.sign(
+					{
+						firstName: results.rows[0].firstName,
+						lastName: results.rows[0].lastName,
+						email: results.rows[0].email,
+						id: results.rows[0].id,
+					},
+					jwtSecret,
+					{ expiresIn: 10800 }
+				);
+				var ca = accessToken;
+				var decoded = jwt_decode(ca);
+				console.log("anything");
+				res.status(200).send({ token: accessToken });
+			} else {
+				res.status(400).send("User not authenticated");
+			}
+		} catch (error) {
+			console.log(error);
 		}
 	};
+	//   const validated = await compare(results, res);
 	creds.connect((err, client, release) => {
 		if (email) {
 			creds.query(`SELECT * FROM "Users" WHERE email = '${email}'`, (error, results) => {
 				if (results) {
+					console.log("before");
 					compare(results, res);
+					// console.log(compare(results, res));
 				} else {
 					res.status(400).send(error);
 				}
